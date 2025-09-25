@@ -2,7 +2,7 @@
 
 client_id = "5d265a3bb18c6a16ff56cc9aa5267bb8"
 name = "wishlist"
-application_url = "https://rose-needle-estimates-bracelet.trycloudflare.com"
+application_url = "https://platform-citations-island-obvious.trycloudflare.com"
 embedded = true
 handle = "wishlist-900"
 
@@ -26,7 +26,7 @@ api_version = "2025-07"
 scopes = "write_products"
 
 [auth]
-redirect_urls = ["https://rose-needle-estimates-bracelet.trycloudflare.com/auth/callback", "https://rose-needle-estimates-bracelet.trycloudflare.com/auth/shopify/callback", "https://rose-needle-estimates-bracelet.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://platform-citations-island-obvious.trycloudflare.com/auth/callback", "https://platform-citations-island-obvious.trycloudflare.com/auth/shopify/callback", "https://platform-citations-island-obvious.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false

@@ -1,0 +1,11 @@
+name = "wishlist-icon"
+type = "theme"
+uid = "23cc0911-4903-ae58-b04a-1a7627eee9a0470e04c9"
+
+[build]
+command = "npm run build"
+path = "extensions/add-to-wishlist-icon"
+
+[dev]
+command = "npm run dev"
+path = "extensions/add-to-wishlist-icon"

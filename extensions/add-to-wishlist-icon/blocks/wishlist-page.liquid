@@ -1,0 +1,325 @@
+<!-- Alpine.js for interactivity -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+  .wishlist-page {
+    padding: 36px 0;
+  }
+  .title-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    color: black;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .close-btn:hover {
+    background-color: black;
+    color: white;
+  }
+  .wishlist-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  .wishlist-card button:focus {
+    outline: 2px solid #d32f2f;
+    outline-offset: 2px;
+  }
+  .wishlist-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+  .wishlist-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .wishlist-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  }
+  .card-image {
+    max-height: 250px;
+    width: 100%;
+    object-fit: contain;
+    border-bottom: 1px solid #eee;
+  }
+  .card-content {
+    padding: 1.2rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    color: #2c3e50;
+  }
+  .card-details {
+    margin-bottom: 1.2rem;
+    background: #f9f9f9;
+    padding: 0.6rem;
+    border-radius: 6px;
+  }
+  .price {
+    font-size: 15px;
+    font-weight: 600;
+    color: #27ae60;
+  }
+  .qty {
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .card-actions {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: auto;
+  }
+  .add-to-cart {
+    flex: 1;
+    background: black;
+    color: white;
+    border: none;
+    padding: 0.7rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .add-to-cart:hover {
+    background: #219653;
+  }
+  .remove-all {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .remove-all:hover {
+    background: #c0392b;
+  }
+  .qty-btn {
+  background: #ededed;
+  border: none;
+  color: #222;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  margin: 0 2px;
+  transition: background 0.18s;
+}
+.qty-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.qty-btn:not(:disabled):hover {
+  background: #dadada;
+}
+
+</style>
+
+<div
+  class="wishlist-page page-width"
+  x-data="wishlist()"
+  x-init="init()"
+  data-customer-id="{{ customer.id }}"
+  data-shop="{{ shop.permanent_domain }}"
+>
+  <div class="title-button">
+    <h1 style="font-size: 2rem; margin-bottom: 1rem;">Your Wishlist</h1>
+    <button class="remove-all" @click="removeAll()">Remove All</button>
+  </div>
+
+  <!-- Empty state -->
+  <template x-if="items.length === 0 && !isLoading">
+    <div style="padding: 1.5rem; text-align: center; color: #666;">
+      <p>Your wishlist is empty.</p>
+      <a href="/collections/all" style="color: #0066c0; text-decoration: underline;"> Browse products → </a>
+    </div>
+  </template>
+
+  <!-- Loading state -->
+  <template x-if="isLoading">
+    <div style="padding: 1.5rem; text-align: center; color: #666;">
+      <p>Loading...</p>
+    </div>
+  </template>
+
+  <!-- Wishlist items -->
+  <div class="wishlist-container" x-show="items.length > 0">
+    <template x-for="item in items" :key="item.id">
+      <div class="wishlist-card">
+        <button @click="removeOne(item)" class="close-btn" aria-label="Remove">×</button>
+        <img :src="item.imageUrl" :alt="item.productTitle" class="card-image">
+        <!-- Card Content -->
+        <div
+          class="card-content"
+          x-data="
+            {
+                localQty: item.quantity,
+                increase() { if (this.localQty < 99) this.localQty++ },
+                decrease() { if (this.localQty > 1) this.localQty-- }
+            }
+          "
+        >
+          <h2 class="card-title" x-text="item.productTitle"></h2>
+          <div class="card-details">
+            <div class="price">Price: $<span x-text="item.price.toFixed(2)"></span></div>
+            <div class="qty">
+              Qty:
+              <button @click="decrease" class="qty-btn" :disabled="localQty === 1" style="margin:0 6px;">–</button>
+              <span x-text="localQty"></span>
+              <button @click="increase" class="qty-btn" :disabled="localQty === 99" style="margin:0 6px;">+</button>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button @click="addToCart({ ...item, quantity: localQty })" class="add-to-cart">Add to cart</button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('wishlist', () => ({
+      apiBase: 'https://platform-citations-island-obvious.trycloudflare.com/api/wishlist',
+      customerId: null,
+      shop: null,
+      items: [],
+      isLoading: false,
+
+      init() {
+        this.customerId = this.$el.dataset.customerId;
+        this.shop = this.$el.dataset.shop;
+        this.loadWishlist();
+      },
+
+      async loadWishlist() {
+        this.isLoading = true;
+        try {
+          const res = await fetch(
+            `${this.apiBase}?customerId=${encodeURIComponent(this.customerId)}&shop=${encodeURIComponent(this.shop)}`,
+            {
+              headers: { Accept: 'application/json' },
+            }
+          );
+          if (!res.ok) throw new Error(`Error ${res.status}`);
+          const data = await res.json();
+          this.items = data.wishlists.map((item) => ({
+            ...item,
+            price: parseFloat(item.price),
+            imageUrl: item.productImage || 'https://picsum.photos/200/300',
+          }));
+        } catch (e) {
+          console.error(e);
+        } finally {
+          this.isLoading = false;
+        }
+      },
+
+      async removeOne(item) {
+        try {
+          const res = await fetch(this.apiBase, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'DELETE',
+              customerId: this.customerId,
+              shop: this.shop,
+              productId: item.productId,
+            }),
+          });
+          if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+          await this.loadWishlist();
+        } catch (e) {
+          console.error(e);
+        }
+      },
+
+      async removeAll() {
+        if (!this.items.length) return;
+        const ids = this.items.map((i) => i.id);
+        try {
+          const res = await fetch(this.apiBase, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'DELETE_ALL',
+              ids,
+              customerId: this.customerId,
+              shop: this.shop,
+            }),
+          });
+          if (!res.ok) throw new Error(`Delete all failed: ${res.status}`);
+          await this.loadWishlist();
+        } catch (e) {
+          console.error(e);
+        }
+      },
+
+      addToCart(item) {
+        // TODO: implement Shopify AJAX cart add logic
+      },
+    }));
+  });
+</script>
+{% schema %}
+{
+  "name": "Wishlist Page",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Page Title",
+      "default": "Your Wishlist"
+    },
+    {
+      "type": "text",
+      "id": "empty_message",
+      "label": "Empty Wishlist Message",
+      "default": "Your wishlist is empty."
+    },
+    {
+      "type": "url",
+      "id": "browse_link",
+      "label": "Browse Products Link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "text",
+      "id": "browse_text",
+      "label": "Browse Products Text",
+      "default": "Browse products →"
+    }
+  ]
+}
+{% endschema %}

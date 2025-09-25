@@ -1,0 +1,203 @@
+<div class="wishlist-button" x-data="wishlist">
+
+  <button type="button" @click="toggleWishlist" style="display: inline-flex; justify-content: center; align-items: center; width: 96%; height: 50px; background-color: #000; color: #fff; font-size: 1.4rem; font-weight: 500; border: none; border-radius: 4px; cursor: pointer;" :class="{ 'wishlisted': isWishlisted }">
+    <!-- Heart icon SVG - outlined when not wishlisted, filled when wishlisted -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" :fill="isWishlisted ? 'currentColor' : 'none'" width="24" height="24" style="margin-right: 0.5rem;" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12.75 9 12.75s9-5.53 9-12.75z"/>
+    </svg>
+    <span x-text="isWishlisted ? 'Remove from WishList' : 'Add to WishList'"></span>
+  </button>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<!-- jQuery (required for Toastr) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+ <script>
+  // Initialize Toastr with custom settings
+      toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "3000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+      };
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('wishlist', () => ({
+                isWishlisted: false,
+                apiUrl: "https://platform-citations-island-obvious.trycloudflare.com",
+                customerId: "{{customer.id}}",
+                productId: "{{product.id}}",
+                productTitle: "{{ product.title | escape }}",
+                shop: "{{shop.permanent_domain}}",
+                productImage: "{{ product.featured_image | img_url: 'master' }}",
+
+                async init() {
+                    await this.checkWishlistStatus();
+                },
+
+                async checkWishlistStatus() {
+                    if (!this.customerId || !this.productId || !this.shop) {
+                        console.log('Missing required data for wishlist check');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`${this.apiUrl}/api/wishlist?customerId=${this.customerId}&productId=${this.productId}&shop=${this.shop}`);
+                        const data = await response.json();
+
+                        if (data.ok && data.wishlists && data.wishlists.length > 0) {
+                            this.isWishlisted = true;
+                        } else {
+                            this.isWishlisted = false;
+                        }
+                    } catch (error) {
+                        console.error('Error checking wishlist status:', error);
+                        this.isWishlisted = false;
+                    }
+                },
+
+                async toggleWishlist() {
+                    if (!this.customerId || !this.productId || !this.shop) {
+                        toastr.error('Missing customer or product information', 'Error');
+                        return;
+                    }
+
+                    try {
+                        if (this.isWishlisted) {
+                            // Remove from wishlist
+                            await this.removeFromWishlist();
+                        } else {
+                            // Add to wishlist
+                            await this.addToWishlist();
+                        }
+                    } catch (error) {
+                        console.error('Error toggling wishlist:', error);
+                        toastr.error('An error occurred', 'Error');
+                    }
+                },
+
+                async addToWishlist() {
+                    const formData = new FormData();
+                    formData.append("customerId", this.customerId);
+                    formData.append("productId", this.productId);
+                    formData.append("productTitle", this.productTitle);
+                    formData.append("quantity", "1");
+                    formData.append("price", "{{product.price | money_without_currency}}");
+                    formData.append("shop", this.shop);
+                    formData.append("productImage", this.productImage);
+                    formData.append("_action", "CREATE");
+
+                    const requestOptions = {
+                        method: "POST",
+                        body: formData,
+                        redirect: 'follow',
+                        credentials: "include",
+                    };
+
+                    const response = await fetch(`${this.apiUrl}/api/wishlist`, requestOptions);
+                    const data = await response.json();
+
+                    if (response.ok && data.ok) {
+                        this.isWishlisted = true;
+                        toastr.success('Item added to Wishlist!', 'Success', {
+                            timeOut: 2000,
+                            positionClass: "toast-top-right"
+                        });
+                    } else {
+                        throw new Error(data.message || 'Failed to add item');
+                    }
+                },
+
+                async removeFromWishlist() {
+                    const formData = new FormData();
+                    formData.append("customerId", this.customerId);
+                    formData.append("productId", this.productId);
+                    formData.append("shop", this.shop);
+                    formData.append("_action", "DELETE");
+
+                    const requestOptions = {
+                        method: "POST",
+                        body: formData,
+                        redirect: 'follow',
+                        credentials: "include",
+                    };
+
+                    const response = await fetch(`${this.apiUrl}/api/wishlist`, requestOptions);
+                    const data = await response.json();
+
+                    if (response.ok && data.ok) {
+                        this.isWishlisted = false;
+                        toastr.success('Item removed from Wishlist!', 'Success', {
+                            timeOut: 2000,
+                            positionClass: "toast-top-right"
+                        });
+                    } else {
+                        throw new Error(data.message || 'Failed to remove item');
+                    }
+                }
+            }))
+        })
+    </script>
+
+<style>
+.polaris-banner {
+  background-color: #e0f3e0;
+  border: 1px solid #50b83c;
+  color: #108043;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.wishlist-button button.wishlisted {
+  background-color: #dc3545 !important;
+}
+
+.wishlist-button button.wishlisted:hover {
+  background-color: #c82333 !important;
+}
+
+#toast-container > .toast {
+   background-color: #fff;
+   border: 1px solid #ddd;
+   color: #333;
+}
+
+#toast-container > .toast-success {
+   border-left: 4px solid #5e8e3e;
+}
+
+#toast-container > .toast-error {
+   border-left: 4px solid #d72c0d;
+}
+
+#toast-container > .toast-warning {
+   border-left: 4px solid #e6a700;
+}
+</style>
+
+{% schema %}
+{
+  "name": "Wishlist Button",
+  "target": "section",
+  "settings": [
+    { "type": "product", "id": "product", "label": "product", "autofill": true },
+    { "type": "color", "id": "colour", "label": "Star Colour", "default": "#ff0000" }
+  ]
+}
+{% endschema %}

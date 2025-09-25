@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Extension Test</title>
+    <link rel="stylesheet" href="assets/wishlist.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: white;
+        }
+        .product-image {
+            width: 100px;
+            height: 100px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .product-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .product-price {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Wishlist Extension Test Page</h1>
+
+        <div class="instructions">
+            <h3>📋 Testing Instructions</h3>
+            <ol>
+                <li><strong>Test Button States:</strong> Click the wishlist buttons to see them toggle between add/remove states</li>
+                <li><strong>Check Visual Feedback:</strong> Notice the heart icon fills when product is in wishlist</li>
+                <li><strong>Toast Notifications:</strong> Look for notification messages when adding/removing items</li>
+                <li><strong>Multiple Products:</strong> Test with different products to ensure proper functionality</li>
+                <li><strong>Console Check:</strong> Open browser console to check for any JavaScript errors</li>
+            </ol>
+            <p><em>Note: This test page simulates the wishlist functionality. In a real Shopify store, the API calls would connect to your backend.</em></p>
+        </div>
+
+        <h2>🛍️ Test Products</h2>
+
+        <div class="product-card">
+            <div class="product-image"></div>
+            <h3 class="product-title">The Multi-managed Snowboard</h3>
+            <div class="product-price">Rs. 629.95</div>
+            <div class="buttons">
+                <button class="btn btn-primary">Add to cart</button>
+                <button class="btn btn-primary">Buy it now</button>
+                <div class="wishlist-container" data-product-id="7948642246737">
+                    <button
+                        type="button"
+                        class="wishlist-btn wishlist-button"
+                        data-product-id="7948642246737"
+                        data-product-title="The Multi-managed Snowboard"
+                        data-product-image="https://cdn.shopify.com/s/files/1/0564/3977/3424/products/multi-managed-snowboard.png"
+                        data-product-price="629.95"
+                        aria-label="Add to wishlist"
+                        onclick="toggleWishlist(this)"
+                    >
+                        <svg class="wishlist-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path class="wishlist-icon-outline" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path class="wishlist-icon-fill" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="currentColor" style="display: none;"/>
+                        </svg>
+                        <span class="wishlist-text">Add to Wishlist</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-image"></div>
+            <h3 class="product-title">Premium Wireless Headphones</h3>
+            <div class="product-price">$299.99</div>
+            <div class="buttons">
+                <button class="btn btn-primary">Add to cart</button>
+                <button class="btn btn-primary">Buy it now</button>
+                <div class="wishlist-container" data-product-id="7948642289505">
+                    <button
+                        type="button"
+                        class="wishlist-btn wishlist-button"
+                        data-product-id="7948642289505"
+                        data-product-title="Premium Wireless Headphones"
+                        data-product-image="https://cdn.shopify.com/s/files/1/0564/3977/3424/products/headphones.jpg"
+                        data-product-price="299.99"
+                        aria-label="Add to wishlist"
+                        onclick="toggleWishlist(this)"
+                    >
+                        <svg class="wishlist-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path class="wishlist-icon-outline" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path class="wishlist-icon-fill" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="currentColor" style="display: none;"/>
+                        </svg>
+                        <span class="wishlist-text">Add to Wishlist</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-image"></div>
+            <h3 class="product-title">Smart Fitness Watch</h3>
+            <div class="product-price">$199.50</div>
+            <div class="buttons">
+                <button class="btn btn-primary">Add to cart</button>
+                <button class="btn btn-primary">Buy it now</button>
+                <div class="wishlist-container" data-product-id="7948642322273">
+                    <button
+                        type="button"
+                        class="wishlist-btn wishlist-button"
+                        data-product-id="7948642322273"
+                        data-product-title="Smart Fitness Watch"
+                        data-product-image="https://cdn.shopify.com/s/files/1/0564/3977/3424/products/fitness-watch.jpg"
+                        data-product-price="199.50"
+                        aria-label="Add to wishlist"
+                        onclick="toggleWishlist(this)"
+                    >
+                        <svg class="wishlist-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path class="wishlist-icon-outline" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path class="wishlist-icon-fill" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2" fill="currentColor" style="display: none;"/>
+                        </svg>
+                        <span class="wishlist-text">Add to Wishlist</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>🔧 Troubleshooting</h3>
+            <ul>
+                <li><strong>Buttons not working?</strong> Check the browser console for JavaScript errors</li>
+                <li><strong>No styling?</strong> Ensure wishlist.css is loaded properly</li>
+                <li><strong>Notifications not showing?</strong> Check if JavaScript is enabled</li>
+                <li><strong>Heart icon not changing?</strong> Verify the button has correct data attributes</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Include the wishlist functionality -->
+    <script src="assets/wishlist.js"></script>
+
+    <!-- Mock API for testing (simulates the backend API) -->
+    <script>
+        // Mock API responses for testing
+        const mockWishlistData = new Map();
+
+        // Mock fetch for testing
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options) {
+            // Handle wishlist API calls
+            if (url.includes('/api/wishlist')) {
+                if (options && options.method === 'POST') {
+                    // Simulate add/remove from wishlist
+                    const formData = options.body;
+                    let productId, productTitle, productImage, price;
+
+                    if (formData instanceof FormData) {
+                        productId = formData.get('productId');
+                        productTitle = formData.get('productTitle');
+                        productImage = formData.get('productImage');
+                        price = formData.get('price');
+                    }
+
+                    if (mockWishlistData.has(productId)) {
+                        mockWishlistData.delete(productId);
+                        return new Response(JSON.stringify({
+                            action: 'removed',
+                            message: 'Product removed from wishlist'
+                        }), {
+                            status: 200,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    } else {
+                        mockWishlistData.set(productId, {
+                            productId,
+                            productTitle,
+                            productImage,
+                            price,
+                            quantity: 1
+                        });
+                        return new Response(JSON.stringify({
+                            action: 'added',
+                            message: 'Product added to wishlist',
+                            item: mockWishlistData.get(productId)
+                        }), {
+                            status: 200,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    }
+                } else {
+                    // Handle GET requests (check status)
+                    const urlObj = new URL(url, window.location.origin);
+                    const productId = urlObj.searchParams.get('productId');
+
+                    if (productId) {
+                        const inWishlist = mockWishlistData.has(productId);
+                        return new Response(JSON.stringify({
+                            inWishlist,
+                            item: inWishlist ? mockWishlistData.get(productId) : null
+                        }), {
+                            status: 200,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    }
+                }
+            }
+
+            // Use original fetch for other requests
+            return originalFetch.apply(this, arguments);
+        };
+    </script>
+</body>
+</html>
