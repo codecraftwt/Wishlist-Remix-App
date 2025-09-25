@@ -2,13 +2,13 @@
 
 client_id = "5d265a3bb18c6a16ff56cc9aa5267bb8"
 name = "wishlist"
-application_url = "https://platform-citations-island-obvious.trycloudflare.com"
+application_url = "https://wishlist-remix-app-yxat.onrender.com"
 embedded = true
 handle = "wishlist-900"
 
 [build]
 include_config_on_deploy = true
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
 
 [webhooks]
 api_version = "2025-07"
@@ -26,7 +26,7 @@ api_version = "2025-07"
 scopes = "write_products"
 
 [auth]
-redirect_urls = ["https://platform-citations-island-obvious.trycloudflare.com/auth/callback", "https://platform-citations-island-obvious.trycloudflare.com/auth/shopify/callback", "https://platform-citations-island-obvious.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://wishlist-remix-app-yxat.onrender.com/auth/callback", "https://wishlist-remix-app-yxat.onrender.com/auth/shopify/callback", "https://wishlist-remix-app-yxat.onrender.com/api/auth/callback"]
 
 [pos]
 embedded = false

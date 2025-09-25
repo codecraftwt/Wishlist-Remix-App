@@ -45,11 +45,34 @@
 </div>
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
   
 <script>
+  // Initialize Toastr with custom settings
+  toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "3000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
+  };
   document.addEventListener('alpine:init', () => {
     Alpine.data('wishlist', () => ({
-      apiUrl : "https://platform-citations-island-obvious.trycloudflare.com",
+      apiUrl : "https://wishlist-remix-app-yxat.onrender.com",
       customerId: null,
       productId: null,
       productTitle: null,
@@ -107,6 +130,9 @@
       this.productImage = parentElement.dataset.productImg || null;
     }
 
+    // Optimistically update UI
+    this.isWishlisted = true;
+
     // send formData (works for both guest and logged-in)
     var formData = new FormData();
     formData.append('customerId', this.customerId || '');
@@ -134,46 +160,67 @@
             this.allWishlistData = response.wishlists;
             this.wishlist = this.allWishlistData.map(item => String(item.productId || item.id));
           }
-          alert("Item added to Wishlist!");
+          toastr.success('Item added to Wishlist!', 'Success', {
+            timeOut: 2000,
+            positionClass: "toast-top-right"
+          });
+          this.$dispatch('wishlist-updated', { action: 'add' });
           this.refresh();
           this.productTitle = null;
           this.price = null;
         } else {
           console.error("Add to wishlist failed", result.status);
+          this.isWishlisted = false; // Revert on failure
+          this.$dispatch('wishlist-updated', { action: 'remove' }); // Revert counter
+          toastr.error('Failed to add to wishlist', 'Error');
         }
       })
-      .catch(error => console.error("error : ",error));
+      .catch(error => {
+        console.error("error : ",error);
+        this.isWishlisted = false; // Revert on failure
+        this.$dispatch('wishlist-updated', { action: 'remove' }); // Revert counter
+        toastr.error('Error adding to wishlist', 'Error');
+      });
   },
 
       async remove() {
-        if (this.allWishlistData && this.allWishlistData.length) {
-          const selectedWishlist = this.allWishlistData.filter(item => String(item.productId) === String(this.productId) || String(item.id) === String(this.productId));
-          this.delete_id = selectedWishlist[0]?.id || selectedWishlist[0]?.productId;
-        }
+        // Optimistically update UI
+        this.isWishlisted = false;
 
-        if (!this.delete_id) {
-          console.warn('No id on product, cannot delete');
-          return;
-        }
+        const formData = new FormData();
+        formData.append('customerId', this.customerId || '');
+        formData.append('productId', this.productId);
+        formData.append('shop', "{{shop.permanent_domain}}");
+        formData.append('_action', 'DELETE');
+
+        const requestOptions = {
+          method: "POST",
+          body: formData,
+          redirect: 'follow',
+          credentials: "include"
+        };
 
         try {
-          const res = await fetch(`${this.apiUrl}/api/wishlist`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ action: "DELETE", id: this.delete_id, customerId: this.customerId || undefined }),
-          });
+          const res = await fetch(`${this.apiUrl}/api/wishlist`, requestOptions);
+          const data = await res.json();
 
-          if (!res.ok) {
-            throw new Error(`Delete failed: ${res.status}`);
+          if (res.ok && data.ok) {
+            toastr.success('Item removed from Wishlist!', 'Success', {
+              timeOut: 2000,
+              positionClass: "toast-top-right"
+            });
+            this.$dispatch('wishlist-updated', { action: 'remove' });
+            await this.refresh();
+          } else {
+            this.isWishlisted = true; // Revert on failure
+            this.$dispatch('wishlist-updated', { action: 'add' }); // Revert counter
+            throw new Error(data.message || 'Failed to remove item');
           }
-
-          await this.refresh();
-          alert('Item removed from Wishlist!');
         } catch (err) {
           console.error('Failed to remove wishlist item:', err);
+          this.isWishlisted = true; // Revert on failure
+          this.$dispatch('wishlist-updated', { action: 'add' }); // Revert counter
+          toastr.error('Failed to remove from wishlist', 'Error');
         }
       },
 
@@ -205,9 +252,33 @@
   }
 </style>
 
+<style>
+#toast-container > .toast {
+  background-color: #fff !important;
+  border: 1px solid #ddd;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  opacity: 1 !important;
+  border-radius: 6px;
+  z-index: 9999;
+}
+
+#toast-container > .toast-success {
+  border-left: 4px solid #5e8e3e;
+}
+
+#toast-container > .toast-error {
+  border-left: 4px solid #d72c0d;
+}
+
+#toast-container > .toast-warning {
+  border-left: 4px solid #e6a700;
+}
+</style>
+
 {% schema %}
 {
-  "name": "Catalog Heart Icon",
+  "name": "Heart Icon",
   "target": "section",
   "settings": [
     { "type": "product", "id": "product", "label": "product", "autofill": true }
