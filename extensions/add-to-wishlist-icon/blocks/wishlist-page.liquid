@@ -154,9 +154,14 @@
 
   <!-- Empty state -->
   <template x-if="items.length === 0 && !isLoading">
-    <div style="padding: 1.5rem; text-align: center; color: #666;">
-      <p>Your wishlist is empty.</p>
-      <a href="/collections/all" style="color: #0066c0; text-decoration: underline;"> Browse products → </a>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 3rem 1.5rem; text-align: center; color: #666;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #ccc;">
+        <path d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-3 7h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 12.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
+      </svg>
+      <h3 style="margin: 0; font-size: 1.2rem; color: #333;">Your wishlist is empty</h3>
+      <p style="margin: 0; color: #666;">Add more items to this wishlist and see them here.</p>
+      <a href="/collections/all" style="color: #007bff; text-decoration: none; font-weight: 500; padding: 0.5rem 1rem; border: 1px solid #007bff; border-radius: 4px;">Browse products →</a>
     </div>
   </template>
 
@@ -172,7 +177,7 @@
     <template x-for="item in items" :key="item.id">
       <div class="wishlist-card">
         <button @click="removeOne(item)" class="close-btn" aria-label="Remove">×</button>
-        <img :src="item.imageUrl" :alt="item.productTitle" class="card-image">
+        <img :src="item.imageUrl" :alt="item.productTitle" width="250" height="250" class="card-image">
         <!-- Card Content -->
         <div
           class="card-content"
