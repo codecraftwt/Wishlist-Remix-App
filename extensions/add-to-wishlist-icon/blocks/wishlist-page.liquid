@@ -144,6 +144,7 @@
   class="wishlist-page page-width"
   x-data="wishlist()"
   x-init="init()"
+  @wishlist-updated.window="handleUpdate($event.detail)"
   data-customer-id="{{ customer.id }}"
   data-shop="{{ shop.permanent_domain }}"
 >
@@ -216,14 +217,47 @@
       shop: null,
       items: [],
       isLoading: false,
+      isLoggedIn: false,
 
       init() {
         this.customerId = this.$el.dataset.customerId;
         this.shop = this.$el.dataset.shop;
-        this.loadWishlist();
+        this.isLoggedIn = !!this.customerId;
+        if (this.isLoggedIn) {
+          this.loadLoggedInWishlist();
+        } else {
+          this.loadFromLocalStorage();
+        }
       },
 
-      async loadWishlist() {
+      handleUpdate(detail) {
+        if (this.isLoggedIn) {
+          this.loadLoggedInWishlist();
+        } else {
+          this.loadFromLocalStorage();
+        }
+      },
+
+      loadFromLocalStorage() {
+        this.isLoading = true;
+        try {
+          const stored = localStorage.getItem('guestWishlist');
+          const parsed = stored ? JSON.parse(stored) : [];
+          this.items = parsed.map((item) => ({
+            ...item,
+            id: item.productId,
+            price: parseFloat(item.price),
+            imageUrl: item.productImage || 'https://picsum.photos/200/300',
+          }));
+        } catch (error) {
+          console.error('Error loading from localStorage:', error);
+          this.items = [];
+        } finally {
+          this.isLoading = false;
+        }
+      },
+
+      async loadLoggedInWishlist() {
         this.isLoading = true;
         try {
           const res = await fetch(
@@ -247,46 +281,66 @@
       },
 
       async removeOne(item) {
-        try {
-          const res = await fetch(this.apiBase, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'DELETE',
-              customerId: this.customerId,
-              shop: this.shop,
-              productId: item.productId,
-            }),
-          });
-          if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-          await this.loadWishlist();
-        } catch (e) {
-          console.error(e);
+        if (this.isLoggedIn) {
+          try {
+            const res = await fetch(this.apiBase, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'DELETE',
+                customerId: this.customerId,
+                shop: this.shop,
+                productId: item.productId,
+              }),
+            });
+            if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+            await this.loadLoggedInWishlist();
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          try {
+            const guestWishlist = JSON.parse(localStorage.getItem('guestWishlist') || '[]');
+            const updated = guestWishlist.filter(i => i.productId !== item.productId);
+            localStorage.setItem('guestWishlist', JSON.stringify(updated));
+            this.loadFromLocalStorage();
+          } catch (error) {
+            console.error('Error removing from localStorage:', error);
+          }
         }
       },
 
       async removeAll() {
         if (!this.items.length) return;
-        const ids = this.items.map((i) => i.id);
-        try {
-          const res = await fetch(this.apiBase, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'DELETE_ALL',
-              ids,
-              customerId: this.customerId,
-              shop: this.shop,
-            }),
-          });
-          if (!res.ok) throw new Error(`Delete all failed: ${res.status}`);
-          await this.loadWishlist();
-        } catch (e) {
-          console.error(e);
+        if (this.isLoggedIn) {
+          const ids = this.items.map((i) => i.id);
+          try {
+            const res = await fetch(this.apiBase, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'DELETE_ALL',
+                ids,
+                customerId: this.customerId,
+                shop: this.shop,
+              }),
+            });
+            if (!res.ok) throw new Error(`Delete all failed: ${res.status}`);
+            await this.loadLoggedInWishlist();
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          try {
+            localStorage.removeItem('guestWishlist');
+            this.items = [];
+          } catch (error) {
+            console.error('Error clearing localStorage:', error);
+          }
         }
       },
 

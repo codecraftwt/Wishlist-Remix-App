@@ -53,7 +53,7 @@
       </div>
 
       <div class="slider-content" x-show="wishlistItems.length > 0">
-        <template x-for="item in wishlistItems" :key="item.id">
+        <template x-for="item in wishlistItems">
           <div class="wishlist-item">
             <button @click="removeItem(item.id, item.productId)" class="remove-cross" title="Remove item">
               <svg
@@ -72,7 +72,7 @@
             <img :src="item.productImage" :alt="item.productTitle" width="80" height="80" class="item-image">
             <div class="item-details">
               <h3 x-text="item.productTitle"></h3>
-              <p class="price">Price: $<span x-text="item.price ? item.price.toFixed(2) : 'N/A'"></span></p>
+              <p class="price">Price: $<span x-text="item.price ? parseFloat(item.price).toFixed(2) : 'N/A'"></span></p>
               <div class="item-actions">
                 <button @click="addToCart(item.productId, 1)" class="add-to-cart-btn">
                   <svg
@@ -123,17 +123,45 @@
       wishlistItems: [],
       showSlider: false,
       isLoading: true,
+      isLoggedIn: !!'{{ customer.id }}',
 
       async init() {
-        if (this.customerId && this.shop) {
+        if (this.isLoggedIn && this.shop) {
           await this.fetchCount();
         } else {
+          this.loadFromLocalStorage();
+        }
+      },
+
+      loadFromLocalStorage() {
+        try {
+          const stored = localStorage.getItem('guestWishlist');
+          const parsed = stored ? JSON.parse(stored) : [];
+          this.wishlistItems = parsed.map(item => ({ ...item, id: item.productId }));
+          this.count = this.wishlistItems.length;
+        } catch (error) {
+          console.error('Error loading from localStorage:', error);
+          this.wishlistItems = [];
           this.count = 0;
+        } finally {
           this.isLoading = false;
         }
       },
 
+      saveToLocalStorage() {
+        try {
+          const toSave = this.wishlistItems.map(item => {
+            const { id, ...rest } = item;
+            return rest;
+          });
+          localStorage.setItem('guestWishlist', JSON.stringify(toSave));
+        } catch (error) {
+          console.error('Error saving to localStorage:', error);
+        }
+      },
+
       async fetchCount() {
+        if (!this.isLoggedIn) return;
         try {
           const response = await fetch(`${this.apiUrl}/api/wishlist?customerId=${this.customerId}&shop=${this.shop}`);
           const data = await response.json();
@@ -149,43 +177,64 @@
       },
 
       async fetchFullWishlist() {
+        if (!this.isLoggedIn) return;
         if (!this.customerId || !this.shop) return;
         await this.fetchCount();
       },
 
       handleUpdate(detail) {
-        if (detail.action === 'add') {
-          this.count++;
-        } else if (detail.action === 'remove') {
-          this.count--;
+        if (this.isLoggedIn) {
+          if (detail.action === 'add') {
+            this.count++;
+          } else if (detail.action === 'remove') {
+            this.count--;
+          }
+          this.fetchFullWishlist();
+        } else {
+          if (detail.action === 'add') {
+            this.count++;
+          } else if (detail.action === 'remove') {
+            this.count--;
+          }
+          this.loadFromLocalStorage();
         }
-        this.fetchFullWishlist();
       },
 
       goToWishlist() {
         this.showSlider = true;
-        this.fetchFullWishlist();
+        if (this.isLoggedIn) {
+          this.fetchFullWishlist();
+        } else {
+          this.loadFromLocalStorage();
+        }
       },
 
       async removeItem(id, productId) {
-        try {
-          const formData = new FormData();
-          formData.append('customerId', this.customerId);
-          formData.append('productId', productId);
-          formData.append('shop', this.shop);
-          formData.append('_action', 'DELETE');
+        if (this.isLoggedIn) {
+          try {
+            const formData = new FormData();
+            formData.append('customerId', this.customerId);
+            formData.append('productId', productId);
+            formData.append('shop', this.shop);
+            formData.append('_action', 'DELETE');
 
-          const response = await fetch(`${this.apiUrl}/api/wishlist`, {
-            method: 'POST',
-            body: formData,
-          });
-          const data = await response.json();
-          if (data.ok) {
-            this.fetchFullWishlist();
-            window.dispatchEvent(new CustomEvent('wishlist-updated', { detail: { action: 'remove' } }));
+            const response = await fetch(`${this.apiUrl}/api/wishlist`, {
+              method: 'POST',
+              body: formData,
+            });
+            const data = await response.json();
+            if (data.ok) {
+              this.fetchFullWishlist();
+              window.dispatchEvent(new CustomEvent('wishlist-updated', { detail: { action: 'remove' } }));
+            }
+          } catch (error) {
+            console.error('Error removing item:', error);
           }
-        } catch (error) {
-          console.error('Error removing item:', error);
+        } else {
+          this.wishlistItems = this.wishlistItems.filter(item => item.id !== id);
+          this.count = this.wishlistItems.length;
+          this.saveToLocalStorage();
+          window.dispatchEvent(new CustomEvent('wishlist-updated', { detail: { action: 'remove' } }));
         }
       },
 
