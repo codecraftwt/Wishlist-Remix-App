@@ -127,9 +127,36 @@
 
       async init() {
         if (this.isLoggedIn && this.shop) {
+          await this.migrateGuestData();
           await this.fetchCount();
         } else {
           this.loadFromLocalStorage();
+        }
+      },
+
+      async migrateGuestData() {
+        try {
+          const guestData = JSON.parse(localStorage.getItem('guestWishlist') || '[]');
+          if (guestData.length > 0) {
+            for (const item of guestData) {
+              const formData = new FormData();
+              formData.append('customerId', this.customerId);
+              formData.append('productId', item.productId);
+              formData.append('productTitle', item.productTitle);
+              formData.append('price', item.price);
+              formData.append('productImage', item.productImage);
+              formData.append('quantity', item.quantity);
+              formData.append('shop', this.shop);
+              formData.append('_action', 'CREATE');
+              await fetch(`${this.apiUrl}/api/wishlist`, {
+                method: 'POST',
+                body: formData,
+              });
+            }
+            localStorage.removeItem('guestWishlist');
+          }
+        } catch (error) {
+          console.error('Migration error:', error);
         }
       },
 
