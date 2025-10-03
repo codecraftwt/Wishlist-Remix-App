@@ -58,14 +58,15 @@ export async function action({ request }) {
   console.log("Received data:", data);
   console.log("Content-Type:", contentType);
 
-  const customerId = data.customerId;
+  const customerId = data.customerId === "null" || !data.customerId || data.customerId.trim() === "" ? null : data.customerId.trim();
+  const isLoggedIn = data.isLoggedIn === 'true';
   const productId = data.productId;
   const shop = data.shop;
   const _action = data._action || data.action;
 
   // Log validation details for debugging
   console.log("Validation check:");
-  console.log("- customerId:", customerId, "valid:", customerId && customerId.trim() !== '');
+  console.log("- customerId:", customerId, "valid:", customerId === null || (customerId && customerId.trim() !== ''));
   console.log("- productId:", productId, "valid:", productId && productId.trim() !== '' && productId !== 'null' && productId !== 'undefined');
   console.log("- shop:", shop, "valid:", shop && shop.trim() !== '');
 
@@ -74,8 +75,8 @@ export async function action({ request }) {
   }
 
   if (_action === "DELETE_ALL") {
-    if (!customerId || !shop) {
-      return withCors(request, json({ message: "Missing data. Required: customerId, shop for DELETE_ALL" }, { status: 400 }));
+    if (!shop) {
+      return withCors(request, json({ message: "Missing data. Required: shop for DELETE_ALL" }, { status: 400 }));
     }
     const ids = data.ids || [];
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -91,10 +92,7 @@ export async function action({ request }) {
     return withCors(request, json({ message: "All wishlist items removed", method: _action }));
   }
 
-  // Require core identifiers for DB-backed operations
-  if (!customerId || String(customerId).trim() === '') {
-    return withCors(request, json({ ok: false, message: 'Invalid or missing customerId', method: _action }, { status: 400 }));
-  }
+
 
   if (!productId || String(productId).trim() === '' || productId === 'null' || productId === 'undefined') {
     return withCors(request, json({ ok: false, message: 'Missing or invalid productId', method: _action }, { status: 400 }));
